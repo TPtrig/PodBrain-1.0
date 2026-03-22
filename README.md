@@ -5,7 +5,7 @@ Turn podcasts into a personal, queryable second brain.
 
 ## Live Demo
 
-[https://pod-brain-teal.vercel.app](https://pod-brain-teal.vercel.app)
+[https://pod-brain-teal.vercel.app]
 
 This GitHub repo is intentionally linked to a **frontend-only demo** on Vercel for easy review.
 
