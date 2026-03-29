@@ -1,10 +1,28 @@
 export type DemoTaskData = {
   taskId: string;
+  domain: "Finance" | "Business" | "AI";
   title: string;
   summary: string;
   transcript: string;
   audioUrl: string;
   takeaways: string[];
+};
+
+export type DemoSeedSource = {
+  id: string;
+  domain: "Finance" | "Business" | "AI";
+  title: string;
+  url: string;
+  sourceLabel: string;
+  summary: string;
+  transcript: string;
+  takeaways: string[];
+  curatedTakeaways: string[];
+  draftTakeaways: string[];
+  conversationTitle: string;
+  userQuestion: string;
+  assistantAnswer: string;
+  assistantContexts: string[];
 };
 
 const DEMO_TASK_PREFIX = "podbrain:demo-task:";
@@ -13,29 +31,161 @@ const DEMO_CURATED_PREFIX = "podbrain:demo-curated:";
 const DEMO_AUDIO =
   "https://file-examples.com/storage/fe7f0c9fdf5f8f53e9f8f9f/2017/11/file_example_MP3_700KB.mp3";
 
-const DEMO_TAKEAWAYS = [
-  "Turn long episodes into weekly action notes instead of passive summaries.",
-  "Curation quality matters more than chunk quantity for downstream RAG answers.",
-  "Run a weekly review loop: capture, edit, prune, and promote only high-signal ideas.",
-  "Ground every chatbot response in saved takeaways to reduce hallucinations.",
-  "Use simple metadata (theme, timestamp, task_id) to keep retrieval scoped and explainable."
+const DEMO_SOURCES: DemoSeedSource[] = [
+  {
+    id: "finance-rates",
+    domain: "Finance",
+    title: "Macro Allocator Weekly: Higher-for-Longer Rates and the New Value of Cash",
+    url: "https://demo.podbrain.app/podcasts/finance/higher-for-longer-rates",
+    sourceLabel: "Finance podcast · parsed 12 days ago · 58 min",
+    summary:
+      "A finance episode on why higher rates changed what operational resilience looks like for software businesses: the conversation focused on refinancing walls, free cash flow after interest expense, and why idle cash became strategic optionality again.",
+    transcript: [
+      "Host: Markets spent years rewarding speed over discipline, but that trade flipped once capital stopped being free.",
+      "Guest: The real breakage point is often debt maturity concentration, not the first quarter of slower revenue.",
+      "Host: So cash balances matter differently now?",
+      "Guest: Yes. Short-duration yield gives management teams time, and time is strategic when product bets need another two quarters.",
+      "Host: What should operators watch besides revenue growth?",
+      "Guest: Free cash flow after interest expense, collections health, and any refinancing wall inside the next eighteen months.",
+      "Host: Does this change pricing strategy too?",
+      "Guest: Absolutely. Expensive capital forces every roadmap bet to answer a payback question."
+    ].join(" "),
+    takeaways: [
+      "In a higher-for-longer rate cycle, the first real fragility often appears in debt maturity concentration rather than headline revenue slowdown.",
+      "Teams should review free cash flow after interest expense when judging resilience; EBITDA can hide refinancing pressure.",
+      "Cash is not idle if short-duration yield restores optionality for hiring, product timing, and distressed acquisitions.",
+      "Usage-based businesses need tighter collections monitoring because billing lag can deteriorate before churn becomes visible.",
+      "Board updates should include a refinancing wall view 12 to 18 months out so maturity risk becomes a product and staffing input."
+    ],
+    curatedTakeaways: [
+      "Teams should review free cash flow after interest expense when judging resilience; EBITDA can hide refinancing pressure.",
+      "Cash is not idle if short-duration yield restores optionality for hiring, product timing, and distressed acquisitions.",
+      "Board updates should include a refinancing wall view 12 to 18 months out so maturity risk becomes a product and staffing input."
+    ],
+    draftTakeaways: [
+      "When capital becomes expensive, roadmap bets should be defended in payback-period language, not only strategic narrative."
+    ],
+    conversationTitle: "Finance memory: rates, cash, refinancing",
+    userQuestion: "From the finance podcasts, what should a software company actually watch if rates stay high for another year?",
+    assistantAnswer:
+      "The strongest pattern was to stop treating runway as the only health metric. The finance material kept pointing toward debt maturity timing, free cash flow after interest expense, and collection discipline as earlier warning signals.",
+    assistantContexts: [
+      "Teams should review free cash flow after interest expense when judging resilience; EBITDA can hide refinancing pressure.",
+      "Board updates should include a refinancing wall view 12 to 18 months out so maturity risk becomes a product and staffing input."
+    ]
+  },
+  {
+    id: "business-ops",
+    domain: "Business",
+    title: "Operator's Stack: Turning GTM Meetings into a Compounding Operating System",
+    url: "https://demo.podbrain.app/podcasts/business/operating-system-cadence",
+    sourceLabel: "Business podcast · parsed 9 days ago · 64 min",
+    summary:
+      "A business episode on why strong execution looks boring from the outside: it linked weekly written operating reviews, ICP discipline, onboarding time-to-value, and packaging simplicity into one compounding operating system.",
+    transcript: [
+      "Host: Every team says they want alignment, but most of them really just create more meetings.",
+      "Guest: Alignment comes from visible ownership and decision continuity, not calendar density.",
+      "Host: What tends to break first when growth slows?",
+      "Guest: ICP discipline. Teams start taking attractive but distracting deals and the whole system gets noisier.",
+      "Host: Where does pricing fit into that?",
+      "Guest: Pricing only lands well when packaging is simple and sales can tell a clean migration story.",
+      "Host: And written memos?",
+      "Guest: Weekly memos keep decisions in sequence. Without them, every review starts from a different interpretation."
+    ].join(" "),
+    takeaways: [
+      "The best operating reviews end with one accountable owner, one leading metric, and one next checkpoint instead of a recap of everything discussed.",
+      "Mid-market SaaS teams often lose growth because ICP discipline erodes before top-of-funnel volume does.",
+      "Pricing changes land better when paired with packaging simplification and a concrete migration story for sales.",
+      "Weekly written memos outperform oversized quarterly decks because they preserve decisions in sequence and reduce reinterpretation.",
+      "If onboarding time-to-value trails the sales promise, retention risk is already embedded before expansion ever enters the conversation."
+    ],
+    curatedTakeaways: [
+      "The best operating reviews end with one accountable owner, one leading metric, and one next checkpoint instead of a recap of everything discussed.",
+      "Pricing changes land better when paired with packaging simplification and a concrete migration story for sales.",
+      "Weekly written memos outperform oversized quarterly decks because they preserve decisions in sequence and reduce reinterpretation."
+    ],
+    draftTakeaways: [
+      "Cross-functional reviews should end with one visible tradeoff, not only a status update, if you want meetings to compound."
+    ],
+    conversationTitle: "Business memory: cadence and GTM",
+    userQuestion: "What kept repeating across the business podcasts about how strong teams actually operate?",
+    assistantAnswer:
+      "They repeatedly turned management into a cadence problem. The business material favored written continuity, narrow accountability, and metrics that survive handoffs over high-energy but low-memory meetings.",
+    assistantContexts: [
+      "The best operating reviews end with one accountable owner, one leading metric, and one next checkpoint instead of a recap of everything discussed.",
+      "Weekly written memos outperform oversized quarterly decks because they preserve decisions in sequence and reduce reinterpretation."
+    ]
+  },
+  {
+    id: "ai-rag-agents",
+    domain: "AI",
+    title: "Practical AI Systems: Reliable RAG, Eval Loops, and Agent Checkpoints",
+    url: "https://demo.podbrain.app/podcasts/ai/reliable-rag-agents",
+    sourceLabel: "AI podcast · parsed 3 days ago · 71 min",
+    summary:
+      "An AI systems episode on why reliable product behavior rarely comes from larger models alone: it walked through retrieval curation, ranking, agent checkpoints, eval loops, and fallback policies as the real levers behind trust.",
+    transcript: [
+      "Host: Teams keep adding more agents, but users still complain about reliability.",
+      "Guest: Because most failures happen before generation, in curation, ranking, and unclear workflow boundaries.",
+      "Host: So reliability is really a product systems issue?",
+      "Guest: Exactly. Good agents stop at checkpoints, show evidence, and ask for confirmation when the cost of guessing is high.",
+      "Host: Where does fine-tuning fit into that stack?",
+      "Guest: Later. If prompting, retrieval, and eval are weak, tuning just compresses noise into weights.",
+      "Host: What's the fastest win?",
+      "Guest: Stronger fallback behavior. A clean 'I don't know' is more trustworthy than confident drift."
+    ].join(" "),
+    takeaways: [
+      "Retrieval quality is usually constrained by curation and ranking before it is constrained by the frontier model.",
+      "Agent workflows should expose checkpoints where the system can stop, show evidence, and ask for confirmation.",
+      "Eval sets need to mirror product-visible failures: groundedness, latency, refusal quality, and recovery after misses.",
+      "Fine-tuning should follow prompt, retrieval, and workflow stabilization; otherwise teams compress noise into weights.",
+      "The fastest reliability gain is often a stronger fallback policy that says 'I don't know' before the system starts guessing."
+    ],
+    curatedTakeaways: [
+      "Retrieval quality is usually constrained by curation and ranking before it is constrained by the frontier model.",
+      "Agent workflows should expose checkpoints where the system can stop, show evidence, and ask for confirmation.",
+      "The fastest reliability gain is often a stronger fallback policy that says 'I don't know' before the system starts guessing."
+    ],
+    draftTakeaways: [
+      "Multi-agent systems only feel useful when each agent has a narrow contract and an observable handoff."
+    ],
+    conversationTitle: "AI memory: RAG reliability and agents",
+    userQuestion: "If we were building AI features next quarter, what should we prioritize before adding more agents?",
+    assistantAnswer:
+      "The AI material was pretty decisive: get memory curation, retrieval ranking, and visible checkpoints right first. More agents on top of weak evidence mostly create more expensive ambiguity.",
+    assistantContexts: [
+      "Retrieval quality is usually constrained by curation and ranking before it is constrained by the frontier model.",
+      "Agent workflows should expose checkpoints where the system can stop, show evidence, and ask for confirmation."
+    ]
+  }
 ];
 
-const DEMO_TRANSCRIPT = [
-  "Host: Welcome back. Today we are focusing on how to build a second brain from podcasts.",
-  "Guest: The first step is extraction, but extraction alone is noisy.",
-  "Guest: You need a human curation pass where you rewrite vague takeaways into actionable statements.",
-  "Host: So the system should reward fewer but stronger takeaways?",
-  "Guest: Exactly. Small, high-signal memory beats massive unfiltered transcripts.",
-  "Guest: Then attach metadata like topic and timestamp for better retrieval later.",
-  "Host: And for chat?",
-  "Guest: Force the assistant to answer from curated memory only. If context is missing, it should say it does not know.",
-  "Host: That keeps trust high and makes demos much clearer.",
-  "Guest: Finally, run a weekly review loop to archive low-value notes and keep your brain clean."
-].join(" ");
+function pickDemoSource(inputUrl: string): DemoSeedSource {
+  const normalized = inputUrl.toLowerCase();
+  if (/(finance|macro|market|rates|bank|credit|cash|valuation)/.test(normalized)) {
+    return DEMO_SOURCES[0];
+  }
+  if (/(business|startup|founder|sales|pricing|gtm|operator)/.test(normalized)) {
+    return DEMO_SOURCES[1];
+  }
+  if (/(ai|llm|rag|agent|model|eval|retriev|prompt)/.test(normalized)) {
+    return DEMO_SOURCES[2];
+  }
+  return DEMO_SOURCES[2];
+}
 
 export function isDemoModeEnabled(): boolean {
   return (process.env.NEXT_PUBLIC_DEMO_MODE ?? "true") === "true";
+}
+
+export function getDemoSeedSources(): DemoSeedSource[] {
+  return DEMO_SOURCES.map((item) => ({
+    ...item,
+    takeaways: [...item.takeaways],
+    curatedTakeaways: [...item.curatedTakeaways],
+    draftTakeaways: [...item.draftTakeaways],
+    assistantContexts: [...item.assistantContexts]
+  }));
 }
 
 export function createDemoTask(inputUrl: string): DemoTaskData {
@@ -44,22 +194,20 @@ export function createDemoTask(inputUrl: string): DemoTaskData {
   }
 
   const taskId = `demo-${Date.now()}`;
-  const title = inputUrl.toLowerCase().includes("startup")
-    ? "Demo Episode: Startup Systems and Founder Focus"
-    : "Demo Episode: Building a Podcast Second Brain";
+  const preset = pickDemoSource(inputUrl);
 
   const data: DemoTaskData = {
     taskId,
-    title,
-    summary:
-      "This demo episode explains a Human-in-the-Loop RAG flow: extract transcript insights, curate only high-signal takeaways, then chat strictly against curated memory.",
-    transcript: DEMO_TRANSCRIPT,
+    domain: preset.domain,
+    title: preset.title,
+    summary: preset.summary,
+    transcript: preset.transcript,
     audioUrl: DEMO_AUDIO,
-    takeaways: DEMO_TAKEAWAYS
+    takeaways: preset.takeaways
   };
 
   window.sessionStorage.setItem(`${DEMO_TASK_PREFIX}${taskId}`, JSON.stringify(data));
-  window.sessionStorage.setItem(`${DEMO_CURATED_PREFIX}${taskId}`, JSON.stringify(DEMO_TAKEAWAYS.slice(0, 3)));
+  window.sessionStorage.setItem(`${DEMO_CURATED_PREFIX}${taskId}`, JSON.stringify(preset.curatedTakeaways));
   return data;
 }
 

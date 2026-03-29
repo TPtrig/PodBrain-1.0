@@ -16,7 +16,7 @@ import {
   Sparkles,
   Trash2
 } from "lucide-react";
-import { demoChatAnswer, isDemoModeEnabled } from "@/lib/demo";
+import { demoChatAnswer, getDemoSeedSources, isDemoModeEnabled, type DemoSeedSource } from "@/lib/demo";
 
 type ChatRole = "user" | "assistant";
 
@@ -43,6 +43,7 @@ type PodcastAsset = {
   title: string;
   url: string;
   sourceLabel: string;
+  domain?: string;
   taskId?: string;
   createdAt: number;
 };
@@ -54,6 +55,7 @@ type TakeawayItem = {
   podcastUrl: string;
   text: string;
   enabled: boolean;
+  domain?: string;
   taskId?: string;
   persisted: boolean;
   itemId?: string;
@@ -151,14 +153,120 @@ function makeLocalConversation(): Conversation {
   };
 }
 
-function mockTakeawaysFromTitle(title: string): string[] {
+function inferDomainFromText(raw: string): DemoSeedSource["domain"] {
+  const normalized = raw.toLowerCase();
+  if (/(finance|macro|market|rates|bank|credit|cash|valuation)/.test(normalized)) {
+    return "Finance";
+  }
+  if (/(business|startup|founder|sales|pricing|gtm|operator)/.test(normalized)) {
+    return "Business";
+  }
+  return "AI";
+}
+
+function mockTakeawaysFromTitle(title: string, domain: DemoSeedSource["domain"]): string[] {
+  if (domain === "Finance") {
+    return [
+      `${title}: Expensive capital makes cash timing and maturity visibility more strategic than headline growth alone.`,
+      "Evaluate resilience with free cash flow after interest expense, not just EBITDA.",
+      "Pricing and hiring decisions become better when product bets are tied to payback periods.",
+      "Collections quality often weakens before churn makes the problem obvious.",
+      "A visible refinancing wall is an operating input, not only a treasury update."
+    ];
+  }
+  if (domain === "Business") {
+    return [
+      `${title}: Strong teams compound by preserving decision continuity instead of multiplying meetings.`,
+      "The best reviews end with one owner, one metric, and one next checkpoint.",
+      "Packaging simplification often matters as much as the price change itself.",
+      "ICP discipline usually slips before the top of funnel visibly weakens.",
+      "Written weekly memos preserve decisions better than occasional strategy decks."
+    ];
+  }
   return [
-    `${title}: Turn passive listening into concrete action notes.`,
-    "Curate first: only high-signal takeaways should enter your brain.",
-    "Weekly review loops help keep memory clean and useful.",
-    "Grounded chat responses are safer than broad model guesses.",
-    "Cross-episode synthesis helps form durable mental models."
+    `${title}: Reliable AI products come from curation, evaluation, and checkpoints before they come from larger models.`,
+    "Retrieval quality usually breaks on ranking and curation before it breaks on model capability.",
+    "Agent workflows should pause at checkpoints and show evidence when the cost of guessing is high.",
+    "Fine-tuning is more useful after prompt, retrieval, and workflow quality are already stable.",
+    "A strong fallback policy improves trust faster than adding more autonomous steps."
   ];
+}
+
+function createDemoWorkspaceSeed() {
+  const now = Date.now();
+  const sources = getDemoSeedSources();
+
+  const podcasts: PodcastAsset[] = sources.map((source, index) => ({
+    id: source.id,
+    title: source.title,
+    url: source.url,
+    sourceLabel: source.sourceLabel,
+    domain: source.domain,
+    createdAt: now - (index + 1) * 86_400_000
+  }));
+
+  const takeaways: TakeawayItem[] = sources.flatMap((source) => {
+    const persisted = source.curatedTakeaways.map((text, index) => ({
+      id: `${source.id}-saved-${index}`,
+      itemId: `${source.id}-memory-${index}`,
+      podcastId: source.id,
+      podcastTitle: source.title,
+      podcastUrl: source.url,
+      text,
+      enabled: true,
+      domain: source.domain,
+      taskId: `seed-task-${source.id}`,
+      persisted: true
+    }));
+
+    const drafts = source.draftTakeaways.map((text, index) => ({
+      id: `${source.id}-draft-${index}`,
+      podcastId: source.id,
+      podcastTitle: source.title,
+      podcastUrl: source.url,
+      text,
+      enabled: index === 0,
+      domain: source.domain,
+      taskId: `seed-task-${source.id}`,
+      persisted: false
+    }));
+
+    return [...persisted, ...drafts];
+  });
+
+  const conversations: Conversation[] = sources.map((source, index) => {
+    const createdAt = now - (index + 1) * 43_200_000;
+    return {
+      id: `${source.id}-conversation`,
+      title: source.conversationTitle,
+      messages: [
+        {
+          id: `${source.id}-user`,
+          role: "user",
+          content: source.userQuestion,
+          createdAt
+        },
+        {
+          id: `${source.id}-assistant`,
+          role: "assistant",
+          content: source.assistantAnswer,
+          contexts: source.assistantContexts,
+          createdAt: createdAt + 90_000
+        }
+      ],
+      messageCount: 2,
+      podcastIds: [source.id],
+      createdAt,
+      updatedAt: createdAt + 90_000
+    };
+  });
+
+  return {
+    podcasts,
+    takeaways,
+    conversations,
+    activeConversationId: conversations[2]?.id ?? conversations[0]?.id ?? ""
+  };
 }
 
 function parseIsoToMillis(value?: string | null): number {
@@ -349,6 +457,7 @@ export default function Page() {
   );
 
   const enabledTakeaways = useMemo(() => takeaways.filter((t) => t.enabled), [takeaways]);
+  const savedCount = useMemo(() => takeaways.filter((item) => item.persisted).length, [takeaways]);
   const selectedCount = enabledTakeaways.length;
 
   const upsertConversation = (conversationId: string, mutator: (conversation: Conversation) => Conversation) => {
@@ -457,9 +566,11 @@ export default function Page() {
       setHint(null);
 
       if (isDemoMode) {
-        const seed = makeLocalConversation();
-        setConversations([seed]);
-        setActiveConversationId(seed.id);
+        const seed = createDemoWorkspaceSeed();
+        setPodcasts(seed.podcasts);
+        setTakeaways(seed.takeaways);
+        setConversations(seed.conversations);
+        setActiveConversationId(seed.activeConversationId);
         setBootstrapping(false);
         return;
       }
@@ -691,23 +802,26 @@ export default function Page() {
 
           const podcastId = makeId("pod");
           const title = derivePodcastTitle(rawUrl);
+          const domain = inferDomainFromText(`${title} ${rawUrl}`);
           const podcast: PodcastAsset = {
             id: podcastId,
             title,
             url: rawUrl,
             sourceLabel: "Demo parser",
+            domain,
             createdAt: Date.now()
           };
 
           ensurePodcast(podcast);
 
-          const drafts: TakeawayItem[] = mockTakeawaysFromTitle(title).map((text) => ({
+          const drafts: TakeawayItem[] = mockTakeawaysFromTitle(title, domain).map((text) => ({
             id: makeId("tk"),
             podcastId,
             podcastTitle: title,
             podcastUrl: rawUrl,
             text,
             enabled: true,
+            domain,
             persisted: false
           }));
 
@@ -1069,6 +1183,9 @@ export default function Page() {
                     <h2 className="text-2xl" style={{ fontFamily: "var(--font-heading)" }}>
                       Curated Podcast Takeaways
                     </h2>
+                    <p className="mt-1 text-sm text-ink/65">
+                      {savedCount} saved memory items across finance, business, and AI, plus live drafts ready for review.
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="rounded-full border border-teal/20 bg-teal/10 px-3 py-1 text-xs font-semibold text-teal">
@@ -1095,6 +1212,7 @@ export default function Page() {
                       <div className="mb-3 flex items-center justify-between gap-3">
                         <div>
                           <p className="text-sm font-semibold text-ink">{podcast.title}</p>
+                          <p className="mt-1 text-xs text-teal">{podcast.sourceLabel}</p>
                           <p className="line-clamp-1 text-xs text-ink/60">{podcast.url}</p>
                         </div>
                         <button
@@ -1117,7 +1235,23 @@ export default function Page() {
                               }}
                               className="mt-1 h-4 w-4 rounded border-ink/30 text-teal focus:ring-teal"
                             />
-                            <p className="flex-1 text-sm leading-relaxed text-ink/85">{item.text}</p>
+                            <div className="flex-1">
+                              <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+                                <span
+                                  className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${
+                                    item.persisted ? "bg-teal/10 text-teal" : "bg-coral/12 text-coral"
+                                  }`}
+                                >
+                                  {item.persisted ? "Saved" : "Draft"}
+                                </span>
+                                {item.domain ? (
+                                  <span className="rounded-full bg-paper px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/60">
+                                    {item.domain}
+                                  </span>
+                                ) : null}
+                              </div>
+                              <p className="text-sm leading-relaxed text-ink/85">{item.text}</p>
+                            </div>
                             <button
                               onClick={() => {
                                 void deleteTakeaway(item.id);
