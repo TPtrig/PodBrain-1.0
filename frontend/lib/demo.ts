@@ -35,7 +35,7 @@ const DEMO_TRANSCRIPT = [
 ].join(" ");
 
 export function isDemoModeEnabled(): boolean {
-  return (process.env.NEXT_PUBLIC_DEMO_MODE ?? "false") === "true";
+  return (process.env.NEXT_PUBLIC_DEMO_MODE ?? "true") === "true";
 }
 
 export function createDemoTask(inputUrl: string): DemoTaskData {

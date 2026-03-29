@@ -1222,17 +1222,19 @@ export default function Page() {
             <div className="mx-auto flex w-full max-w-4xl flex-col gap-2">
               {hint ? <p className="text-xs text-teal">{hint}</p> : null}
 
-              <div className="flex flex-wrap items-center gap-2 rounded-lg border border-ink/10 bg-paper/55 px-3 py-2">
-                <KeyRound className="h-3.5 w-3.5 text-ink/60" />
-                <input
-                  type="password"
-                  value={openaiApiKey}
-                  onChange={(e) => setOpenaiApiKey(e.target.value)}
-                  placeholder={isDemoMode ? "OpenAI API Key (optional in demo mode)" : "OpenAI API Key (required for parse/chat/save)"}
-                  className="min-w-[220px] flex-1 bg-transparent text-xs text-ink placeholder:text-ink/45 focus:outline-none"
-                />
-                <p className="text-[11px] text-ink/55">Used only in this session and never stored by backend.</p>
-              </div>
+              {!isDemoMode ? (
+                <div className="flex flex-wrap items-center gap-2 rounded-lg border border-ink/10 bg-paper/55 px-3 py-2">
+                  <KeyRound className="h-3.5 w-3.5 text-ink/60" />
+                  <input
+                    type="password"
+                    value={openaiApiKey}
+                    onChange={(e) => setOpenaiApiKey(e.target.value)}
+                    placeholder="OpenAI API Key (required for parse/chat/save)"
+                    className="min-w-[220px] flex-1 bg-transparent text-xs text-ink placeholder:text-ink/45 focus:outline-none"
+                  />
+                  <p className="text-[11px] text-ink/55">Used only in this session and never stored by backend.</p>
+                </div>
+              ) : null}
 
               <div className="flex items-end gap-2">
                 <textarea
